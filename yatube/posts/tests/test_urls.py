@@ -53,8 +53,6 @@ class PostURLTests(TestCase):
         urls_names = [
             '/follow/',
             '/create/',
-            f'/profile/{self.author.username}/follow/',
-            f'/profile/{self.author.username}/unfollow/',
         ]
         for address in urls_names:
             with self.subTest(address=address):
