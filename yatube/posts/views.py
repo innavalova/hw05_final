@@ -51,7 +51,7 @@ def profile(request, username):
     following = user.is_authenticated and Follow.objects.filter(
         user=request.user.pk,
         author=author.pk
-    ).all()
+    ).exists()
     is_author = author.id == request.user.id
     context = {
         'posts': posts,
