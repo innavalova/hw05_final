@@ -30,6 +30,14 @@ class PostFormTests(TestCase):
             author=cls.author,
             group=cls.group,
         )
+        cls.test_image = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -44,17 +52,9 @@ class PostFormTests(TestCase):
     def test_create_post(self):
         """Валидная форма создает запись в Post."""
         posts_count = Post.objects.count()
-        test_image = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
         uploaded = SimpleUploadedFile(
             name='test.gif',
-            content=test_image,
+            content=self.test_image,
             content_type='image/gif'
         )
         form_data = {
@@ -168,7 +168,6 @@ class CommentFormTests(TestCase):
         self.assertEqual(self.post.comments.count(), comments_count + 1)
 
         comment = Comment.objects.first()
-        print(comment)
         self.assertEqual(comment.text, form_data['text'])
         self.assertEqual(comment.author, form_data['author'])
 

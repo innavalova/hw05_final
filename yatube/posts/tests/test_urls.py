@@ -50,8 +50,16 @@ class PostURLTests(TestCase):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
         # только авторизованному
-        response = self.authorized_user.get('/create/')
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        urls_names = [
+            '/follow/',
+            '/create/',
+            f'/profile/{self.author.username}/follow/',
+            f'/profile/{self.author.username}/unfollow/',
+        ]
+        for address in urls_names:
+            with self.subTest(address=address):
+                response = self.authorized_user.get(address)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
         # только автору
         response = self.authorized_author.get(f'/posts/{self.post.pk}/edit/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -67,6 +75,8 @@ class PostURLTests(TestCase):
         urls_names = [
             '/create/',
             f'/posts/{self.post.pk}/edit/',
+            f'/profile/{self.author.username}/follow/',
+            f'/profile/{self.author.username}/unfollow/',
         ]
         for address in urls_names:
             with self.subTest(address=address):
@@ -99,6 +109,7 @@ class PostURLTests(TestCase):
             f'/group/{self.group.slug}/':
                 'posts/group_list.html',
             '/create/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
         }
         for reverse_name, template in url_templates_names.items():
             with self.subTest(reverse_name=reverse_name):

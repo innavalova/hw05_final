@@ -48,15 +48,18 @@ def profile(request, username):
     page_obj = paginator(request, posts)
 
     user = request.user
-    following = user.is_authenticated and author.following.exists()
-    same_user = author.id == request.user.id
+    following = user.is_authenticated and Follow.objects.filter(
+        user=request.user.pk,
+        author=author.pk
+    ).all()
+    is_author = author.id == request.user.id
     context = {
         'posts': posts,
         'posts_count': posts_count,
         'author': author,
         'page_obj': page_obj,
         'following': following,
-        'same_user': same_user
+        'is_author': is_author
     }
     return render(request, 'posts/profile.html', context)
 
@@ -104,7 +107,6 @@ def post_edit(request, post_id):
         files=request.FILES or None,
         instance=post
     )
-    is_edit = True
     if form.is_valid():
         post = form.save(commit=False)
         post.save()
@@ -112,7 +114,7 @@ def post_edit(request, post_id):
     context = {
         'post': post,
         'form': form,
-        'is_edit': is_edit
+        'is_edit': True,
     }
     return render(request, 'posts/create_post.html', context)
 
@@ -131,13 +133,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    following = Follow.objects.filter(user=request.user).all()
-    author_list = []
-    for author in following:
-        author_list.append(author.author.id)
-    posts = Post.objects.filter(
-        author__in=author_list
-    ).order_by("-pub_date").all()
+    posts = Post.objects.filter(author__following__user=request.user)
     page_obj = paginator(request, posts)
     context = {
         'posts': posts,
@@ -150,13 +146,8 @@ def follow_index(request):
 def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
-    # проверяем наличие подписки на этого автора
-    follow_check = Follow.objects.filter(
-        user=user.id,
-        author=author.id
-    ).count()
-    if follow_check == 0 and author.id != user.id:
-        Follow.objects.create(user=request.user, author=author)
+    if author.id != user.id:
+        Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
 
 

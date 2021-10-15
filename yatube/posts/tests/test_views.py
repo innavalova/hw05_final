@@ -294,6 +294,7 @@ class FollowViewsTest(TestCase):
 
     def test_unfollow(self):
         """Авторизованный пользователь может отписываться от авторов."""
+        Follow.objects.create(user=self.follower, author=self.author)
         self.authorized_follower.get(
             reverse(
                 'posts:profile_unfollow',
