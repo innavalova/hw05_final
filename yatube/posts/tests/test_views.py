@@ -256,13 +256,8 @@ class FollowViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='test_user')
         cls.author = User.objects.create_user(username='test_author')
         cls.follower = User.objects.create_user(username='test_follower')
-        cls.post = Post.objects.create(
-            text="Тестовый пост",
-            author=cls.author
-        )
 
     @classmethod
     def tearDownClass(cls):
@@ -272,11 +267,8 @@ class FollowViewsTest(TestCase):
     def setUp(self):
         self.authorized_author = Client()
         self.authorized_author.force_login(self.author)
-        self.authorized_user = Client()
-        self.authorized_user.force_login(self.user)
         self.authorized_follower = Client()
         self.authorized_follower.force_login(self.follower)
-        # cache.clear()
 
     def test_follow(self):
         """Авторизованный пользователь может подписываться на авторов."""
@@ -309,24 +301,25 @@ class FollowViewsTest(TestCase):
 
     def test_post_in_follower_index(self):
         """Новая запись автора появляется в ленте подписчиков."""
-        self.authorized_follower.get(
-            reverse(
-                'posts:profile_follow',
-                args={self.author.username}
-            )
+        post = Post.objects.create(
+            text="Тестовый пост",
+            author=self.author
         )
+        Follow.objects.create(user=self.follower, author=self.author)
         response = self.authorized_follower.get(reverse('posts:follow_index'))
         post = response.context['posts'][0]
-        self.assertEqual(post.text, self.post.text)
+        self.assertEqual(post.text, post.text)
 
     def test_post_not_in_user_index(self):
         """Новой записи автора нет в ленте неподписанных пользователей."""
-        self.authorized_follower.get(
-            reverse(
-                'posts:profile_follow',
-                args={self.author.username}
-            )
+        post = Post.objects.create(
+            text="Тестовый пост",
+            author=self.author
         )
-        response = self.authorized_user.get(reverse('posts:follow_index'))
+        Follow.objects.create(user=self.follower, author=self.author)
+        user = User.objects.create_user(username='test_user')
+        authorized_user = Client()
+        authorized_user.force_login(user)
+        response = authorized_user.get(reverse('posts:follow_index'))
         posts = response.context['posts']
-        self.assertNotIn(self.post, posts)
+        self.assertNotIn(post, posts)
